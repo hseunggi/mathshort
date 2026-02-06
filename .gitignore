@@ -1,0 +1,123 @@
+########################
+# OS / System
+########################
+.DS_Store
+Thumbs.db
+
+########################
+# Logs
+########################
+*.log
+logs/
+log/
+
+########################
+# Environment files
+########################
+.env
+.env.*
+*.env
+
+########################
+# Java / Spring Boot
+########################
+target/
+build/
+*.class
+*.jar
+*.war
+*.ear
+
+.mvn/wrapper/maven-wrapper.jar
+
+########################
+# Gradle
+########################
+.gradle/
+**/build/
+
+########################
+# Python
+########################
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+dist/
+build/
+
+venv/
+.venv/
+env/
+ENV/
+
+########################
+# Virtualenv
+########################
+pip-wheel-metadata/
+
+########################
+# Node (if used)
+########################
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+########################
+# Docker
+########################
+docker-data/
+.docker/
+*.tar
+
+########################
+# IDE - IntelliJ
+########################
+.idea/
+*.iml
+out/
+
+########################
+# IDE - VS Code
+########################
+.vscode/
+.history/
+
+########################
+# Eclipse
+########################
+.project
+.classpath
+.settings/
+
+########################
+# Windows PowerShell / Temp
+########################
+*.tmp
+*.temp
+
+########################
+# Output files (media, ai results, etc)
+########################
+outputs/
+generated/
+result/
+tmp/
+
+########################
+# DB dumps
+########################
+*.sql
+*.dump
+
+########################
+# Secrets / Keys
+########################
+*.pem
+*.key
+*.crt
+secrets/
+credentials/

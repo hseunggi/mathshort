@@ -1,0 +1,23 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:mysql://mysql:3306/mathshort?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+    username: mathshort
+    password: mathshort
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+  data:
+    redis:
+      host: redis
+      port: 6379
+
+storage:
+  base: ${STORAGE_BASE:/data}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

@@ -121,3 +121,7 @@ tmp/
 *.crt
 secrets/
 credentials/
+
+data/outputs/
+data/uploads/
+frames_intro/*.png

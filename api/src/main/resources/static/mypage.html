@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mathshort - 마이페이지</title>
+  <link rel="stylesheet" href="/assets/style.css" />
+  <script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(','\\)']], displayMath: [['$$','$$']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+  <header class="siteHeader">
+    <div class="headerInner">
+      <a class="brandLink" href="/">
+        <span class="logo" aria-hidden="true"></span>
+        <span class="brandText">Mathshort</span>
+      </a>
+
+      <nav class="mainNav">
+        <a href="/" data-nav="home">홈</a>
+        <a href="/app" data-nav="upload">업로드</a>
+        <a href="/mypage" data-nav="mypage">마이페이지</a>
+      </nav>
+
+      <div class="headerAuth">
+        <span id="headerUser" class="muted2" style="display:none;"></span>
+        <button class="btn ghost" id="headerLoginBtn" type="button">로그인</button>
+        <button class="btn ghost" id="headerLogoutBtn" type="button" style="display:none;">로그아웃</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap pageMain">
+    <div class="pill" title="로컬 MVP">⚡ 빠른 풀이 · 단계별 해설 · 검산 포함</div>
+<div class="grid single">
+  <div class="card">
+    <h2>마이페이지</h2>
+    <div class="hint">내가 만든 풀이와 영상을 다시 볼 수 있어요.</div>
+
+    <div class="fileRow" style="margin-top:10px;">
+      <button class="btn" id="refreshBtn">내 기록 새로고침</button>
+      <span class="muted2">최근 생성 순으로 표시됩니다.</span>
+    </div>
+
+    <div class="list" id="jobList" style="margin-top:14px;"></div>
+  </div>
+</div>
+
+<script type="module" src="/assets/mypage.js"></script>
+  </main>
+</body>
+</html>

@@ -12,32 +12,27 @@ logs/
 log/
 
 ########################
-# Environment files
+# Environment / Secrets
 ########################
 .env
 .env.*
 *.env
+api/src/main/resources/application-local.yml
+api/src/main/resources/application-*.local.yml
 
 ########################
-# Java / Spring Boot
+# Java / Gradle build artifacts
 ########################
 target/
 build/
+**/build/
+.gradle/
 *.class
-*.jar
 *.war
 *.ear
 
-.mvn/wrapper/maven-wrapper.jar
-
 ########################
-# Gradle
-########################
-.gradle/
-**/build/
-
-########################
-# Python
+# Python artifacts
 ########################
 __pycache__/
 *.pyc
@@ -46,16 +41,11 @@ __pycache__/
 *.egg-info/
 .eggs/
 dist/
-build/
 
 venv/
 .venv/
 env/
 ENV/
-
-########################
-# Virtualenv
-########################
 pip-wheel-metadata/
 
 ########################
@@ -67,61 +57,52 @@ yarn-debug.log*
 yarn-error.log*
 
 ########################
-# Docker
+# Docker / Runtime files
 ########################
 docker-data/
 .docker/
 *.tar
+mysql/
+data/mysql/
 
 ########################
-# IDE - IntelliJ
+# IDE / Editor
 ########################
 .idea/
 *.iml
 out/
 
-########################
-# IDE - VS Code
-########################
 .vscode/
 .history/
 
-########################
-# Eclipse
-########################
 .project
 .classpath
 .settings/
 
 ########################
-# Windows PowerShell / Temp
+# Temp / Generated outputs
 ########################
 *.tmp
 *.temp
-
-########################
-# Output files (media, ai results, etc)
-########################
-outputs/
+tmp/
 generated/
 result/
-tmp/
+outputs/
+uploads/
+data/outputs/
+data/uploads/
 
 ########################
-# DB dumps
+# DB dumps / backups
 ########################
-*.sql
 *.dump
+*.bak
 
 ########################
-# Secrets / Keys
+# Keys / Credentials
 ########################
 *.pem
 *.key
 *.crt
 secrets/
 credentials/
-
-data/outputs/
-data/uploads/
-frames_intro/*.png

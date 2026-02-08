@@ -13,6 +13,7 @@ from openai import OpenAI
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 QUEUE_KEY = "queue:jobs"
+VIDEO_QUEUE_KEY = "queue:video_jobs"
 
 # ===== global video settings =====
 FPS = 30
@@ -72,6 +73,47 @@ def update_done(engine, job_id: str, detail_json: str):
     with engine.begin() as conn:
         conn.execute(sql, {"id": job_id, "json": detail_json})
 
+def update_video_pending(engine, job_id: str):
+    sql = text("""
+        UPDATE jobs
+        SET video_status='PENDING', updated_at=NOW(), video_error_message=NULL
+        WHERE id=UUID_TO_BIN(:id)
+    """)
+    with engine.begin() as conn:
+        conn.execute(sql, {"id": job_id})
+
+def update_video_running(engine, job_id: str):
+    sql = text("""
+        UPDATE jobs
+        SET video_status='RUNNING', updated_at=NOW(), video_error_message=NULL
+        WHERE id=UUID_TO_BIN(:id)
+    """)
+    with engine.begin() as conn:
+        conn.execute(sql, {"id": job_id})
+
+def update_video_done(engine, job_id: str, mp4_path: str):
+    sql = text("""
+        UPDATE jobs
+        SET output_mp4_path=:p,
+            video_status='DONE',
+            updated_at=NOW(),
+            video_error_message=NULL
+        WHERE id=UUID_TO_BIN(:id)
+    """)
+    with engine.begin() as conn:
+        conn.execute(sql, {"id": job_id, "p": mp4_path})
+
+def update_video_fail(engine, job_id: str, msg: str):
+    sql = text("""
+        UPDATE jobs
+        SET video_status='FAIL',
+            updated_at=NOW(),
+            video_error_message=:msg
+        WHERE id=UUID_TO_BIN(:id)
+    """)
+    with engine.begin() as conn:
+        conn.execute(sql, {"id": job_id, "msg": msg[:8000]})
+
 def update_video_path(engine, job_id: str, mp4_path: str):
     sql = text("""
         UPDATE jobs
@@ -80,6 +122,14 @@ def update_video_path(engine, job_id: str, mp4_path: str):
     """)
     with engine.begin() as conn:
         conn.execute(sql, {"id": job_id, "p": mp4_path})
+
+def get_detail_json(engine, job_id: str) -> str:
+    sql = text("SELECT detail_json FROM jobs WHERE id=UUID_TO_BIN(:id)")
+    with engine.begin() as conn:
+        row = conn.execute(sql, {"id": job_id}).mappings().first()
+        if not row:
+            raise RuntimeError("job not found")
+        return row.get("detail_json") or ""
 
 def get_input_png(engine, job_id: str) -> str:
     sql = text("SELECT input_png_path FROM jobs WHERE id=UUID_TO_BIN(:id)")
@@ -119,20 +169,26 @@ def solve_math_to_json(client: OpenAI, problem_text: str) -> dict:
 - 반드시 JSON만 출력(코드블록 금지)
 - steps는 최소 4단계 이상
 - 각 step에는 title, explanation(텍스트), formula(없으면 null), check(검산/검증 또는 한줄 점검) 포함
+- formula 필드는 반드시 LaTeX 수식만 작성(자연어 금지)
+- formula에는 \\int, \\frac{a}{b}, x^{2}, a_{n}, \\Rightarrow 등 LaTeX 명령어를 사용
+- 백슬래시는 반드시 \\ 사용(₩ 금지)
+- 가능한 한 지수/첨자는 ^{{}}, _{{}} 형태의 표준 LaTeX로 출력
+- explanation/check/tts/title에는 LaTeX 문법(\\, ^, _, {{}}) 사용 금지
+- explanation/check/tts/title은 일반 텍스트만 사용하고, 필요 시 기호는 ×, ÷, →, ≤, ≥처럼 일반 유니코드 문자로 표기
 - 추가로 steps[i].tts 를 반드시 작성:
   - 선생님이 말로 설명하듯 1~2문장
   - 화면 문장을 그대로 읽지 말기
   - 문장 시작을 매번 "이 단계에서는..."으로 반복 금지
   - 길이 너무 길면 잘릴 수 있으니 20~60자 정도 권장
 - introHook도 반드시 작성:
-  - "핵심은 ~" 형태로 1문장(15~35자 정도)
+  - "핵심은 ~" 형태로 1문장(20자 이하)
 - finalAnswer는 마지막에 한 번만
 
 출력 스키마:
 {{
   "problemText": "...",
-  "concept": "문제 유형 요약(짧게)",
-  "introHook": "이 유형의 핵심 한 문장(자연스럽게)",
+  "concept": "문제 유형 요약(짧게,20자 이하)",
+  "introHook": "이 유형의 핵심 한 문장(20자 이하)",
   "steps": [
     {{
       "idx": 1,
@@ -153,23 +209,138 @@ def solve_math_to_json(client: OpenAI, problem_text: str) -> dict:
 
 
     resp = client.responses.create(
-        model=os.getenv("OPENAI_MODEL", "gpt-5.2"),
+        model=os.getenv("OPENAI_MODEL", "gpt-4.1"),
         input=prompt,
-        reasoning={"effort": os.getenv("OPENAI_REASONING_EFFORT", "xhigh")},
+        reasoning={"effort": os.getenv("OPENAI_REASONING_EFFORT", "medium")},
     )
-    text_out = resp.output_text.strip()
+    text_out = (resp.output_text or "").strip()
 
+    parsed = _parse_json_lenient(text_out)
+    if parsed is not None:
+        parsed.setdefault("problemText", problem_text)
+        parsed.setdefault("concept", "")
+        parsed.setdefault("steps", [])
+        parsed.setdefault("finalAnswer", "")
+        parsed.setdefault("notes", [])
+        return parsed
+
+    return {
+        "problemText": problem_text,
+        "concept": "parse-failed",
+        "steps": [],
+        "finalAnswer": "",
+        "notes": [],
+        "raw": text_out
+    }
+
+
+def _parse_json_lenient(text_out: str) -> dict | None:
+    """
+    모델 출력이 코드블록/설명문을 섞어도 JSON 본문만 최대한 복구해서 파싱한다.
+    """
+    if not text_out:
+        return None
+
+    # 1) 원문 그대로 시도
     try:
-        return json.loads(text_out)
+        obj = json.loads(text_out)
+        return obj if isinstance(obj, dict) else None
     except Exception:
-        return {
-            "problemText": problem_text,
-            "concept": "parse-failed",
-            "steps": [],
-            "finalAnswer": "",
-            "notes": [],
-            "raw": text_out
-        }
+        pass
+
+    # 2) ```json ... ``` 코드블록 제거 후 시도
+    cleaned = re.sub(r"^```(?:json)?\s*", "", text_out.strip(), flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s*```$", "", cleaned.strip())
+    try:
+        obj = json.loads(cleaned)
+        return obj if isinstance(obj, dict) else None
+    except Exception:
+        pass
+
+    # 3) 첫 '{' ~ 마지막 '}' 구간만 추출해 시도
+    start = cleaned.find("{")
+    end = cleaned.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        candidate = cleaned[start:end + 1]
+        try:
+            obj = json.loads(candidate)
+            return obj if isinstance(obj, dict) else None
+        except Exception:
+            return None
+
+    return None
+
+
+def solve_math_from_png_to_json(client: OpenAI, png_path: str) -> dict:
+    with open(png_path, "rb") as f:
+        img_b64 = base64.b64encode(f.read()).decode("utf-8")
+
+    prompt = """
+너는 수학 풀이 튜터다.
+이미지의 문제를 읽고, 아래 스키마의 JSON만 출력해라.
+규칙:
+- 반드시 JSON만 출력(코드블록 금지)
+- steps는 최소 4단계 이상
+- 각 step에는 title, explanation(텍스트), formula(없으면 null), check(검산/검증 또는 한줄 점검), tts 포함
+- formula 필드는 반드시 LaTeX 수식만 작성(자연어 금지)
+- formula에는 \\int, \\frac{a}{b}, x^{2}, a_{n}, \\Rightarrow 등 LaTeX 명령어를 사용
+- 백슬래시는 반드시 \\ 사용(₩ 금지)
+- 가능한 한 지수/첨자는 ^{}, _{} 형태의 표준 LaTeX로 출력
+- explanation/check/tts/title에는 LaTeX 문법(\\, ^, _, {{}}) 사용 금지
+- explanation/check/tts/title은 일반 텍스트만 사용하고, 필요 시 기호는 ×, ÷, →, ≤, ≥처럼 일반 유니코드 문자로 표기
+- introHook 포함 ("핵심은 ~" 1문장)
+- finalAnswer는 마지막에 한 번만
+
+출력 스키마:
+{
+  "problemText": "...",
+  "concept": "문제 유형 요약(20자 이하)",
+  "introHook": "핵심 한 문장(20자 이하)",
+  "steps": [
+    {
+      "idx": 1,
+      "title": "...",
+      "explanation": "...",
+      "formula": "..." or null,
+      "check": "...",
+      "tts": "..."
+    }
+  ],
+  "finalAnswer": "...",
+  "notes": ["...", "..."]
+}
+""".strip()
+
+    resp = client.responses.create(
+        model=os.getenv("OPENAI_MODEL", "gpt-4.1"),
+        input=[{
+            "role": "user",
+            "content": [
+                {"type": "input_text", "text": prompt},
+                {"type": "input_image", "image_url": f"data:image/png;base64,{img_b64}"}
+            ]
+        }],
+        reasoning={"effort": os.getenv("OPENAI_REASONING_EFFORT", "medium")},
+    )
+
+    text_out = (resp.output_text or "").strip()
+    parsed = _parse_json_lenient(text_out)
+    if parsed is not None:
+        parsed.setdefault("problemText", "")
+        parsed.setdefault("concept", "")
+        parsed.setdefault("steps", [])
+        parsed.setdefault("finalAnswer", "")
+        parsed.setdefault("notes", [])
+        return parsed
+
+    return {
+        "problemText": "",
+        "concept": "parse-failed",
+        "steps": [],
+        "finalAnswer": "",
+        "notes": [],
+        "raw": text_out,
+    }
 
 
 # =======================
@@ -280,6 +451,17 @@ def normalize_formula(s: str) -> str:
     # 1) Windows 원화기호 -> 백슬래시
     s = s.replace("₩", "\\")
 
+    # 1.5) 백슬래시 없이 나온 LaTeX 토큰 복구
+    # 예: Rightarrow -> \Rightarrow, rightarrow -> \rightarrow, left/right -> \left/\right
+    # 이미 '\\'가 있는 경우는 건드리지 않음
+    s = re.sub(r"(?<!\\)\bRightarrow\b", r"\\Rightarrow", s)
+    s = re.sub(r"(?<!\\)\brightarrow\b", r"\\rightarrow", s)
+    s = re.sub(r"(?<!\\)\bleft\b", r"\\left", s)
+    s = re.sub(r"(?<!\\)\bright\b", r"\\right", s)
+    s = re.sub(r"(?<!\\)\bint\b", r"\\int", s)
+    # int_0^1 같은 케이스를 우선 복구 (백슬래시 없는 적분)
+    s = re.sub(r"(?<!\\)\bint(?=\s*_)", r"\\int", s)
+
     # 2) 수식 토큰 앞의 'W'를 백슬래시로 복구 (Wsin -> \sin)
     s = re.sub(
         r"W(?=(sin|cos|tan|theta|pi|sqrt|frac|cdot|times|pm|quad|left|right|Rightarrow|to|ge|le|neq)\b)",
@@ -292,6 +474,85 @@ def normalize_formula(s: str) -> str:
     s = re.sub(r"W(?=[\)\]])$", r"\\", s)
 
     return s
+
+
+def sanitize_plain_text(text_in: str) -> str:
+    """
+    explanation/check/tts 같은 일반 텍스트 필드에서
+    깨진 LaTeX 토큰(Wcdot 등)과 LaTeX 명령을 일반 문자로 정리한다.
+    """
+    if text_in is None:
+        return ""
+    s = str(text_in)
+
+    # 깨진 백슬래시 토큰/W토큰 보정
+    s = s.replace("₩", "\\")
+    s = re.sub(r"W(?=(cdot|times|pm|rightarrow|Rightarrow|le|ge|neq)\b)", r"\\", s)
+
+    # 대표 토큰을 일반 문자로 치환
+    repl = {
+        r"\cdot": "×",
+        r"\times": "×",
+        r"\pm": "±",
+        r"\Rightarrow": "→",
+        r"\rightarrow": "→",
+        r"\le": "≤",
+        r"\ge": "≥",
+        r"\neq": "≠",
+        r"\quad": " ",
+        r"\,": " ",
+    }
+    for k, v in repl.items():
+        s = s.replace(k, v)
+
+    # 남아있는 LaTeX 명령어는 백슬래시만 제거해 일반 텍스트화
+    s = re.sub(r"\\([A-Za-z]+)", r"\1", s)
+    # LaTeX 잔여 기호 최소 정리
+    s = s.replace("{", "").replace("}", "")
+    s = re.sub(r"\s+", " ", s).strip()
+    return s
+
+
+def sanitize_detail_payload(detail: dict) -> dict:
+    """
+    DB 저장 전 detail 전체를 정리:
+    - formula는 LaTeX 복구(normalize_formula)
+    - explanation/check/tts/title 등 일반 텍스트는 LaTeX 제거
+    - notes도 동일 정리
+    """
+    if not isinstance(detail, dict):
+        return detail
+
+    out = dict(detail)
+
+    steps = out.get("steps")
+    if isinstance(steps, list):
+        fixed_steps = []
+        for st in steps:
+            if not isinstance(st, dict):
+                continue
+            row = dict(st)
+            row["formula"] = normalize_formula(row.get("formula") or "") if row.get("formula") is not None else None
+            for k in ("title", "explanation", "check", "tts"):
+                if k in row and row.get(k) is not None:
+                    row[k] = sanitize_plain_text(row.get(k))
+            fixed_steps.append(row)
+        out["steps"] = fixed_steps
+
+    for k in ("concept", "introHook", "problemText"):
+        if k in out and out.get(k) is not None:
+            out[k] = sanitize_plain_text(out.get(k))
+
+    if isinstance(out.get("notes"), list):
+        out["notes"] = [sanitize_plain_text(x) for x in out.get("notes")]
+
+    # 전체 문자열 안전망: Wcdot/Wtimes 등 잔여 토큰 제거
+    dumped = json.dumps(out, ensure_ascii=False)
+    dumped = dumped.replace("Wcdot", "×").replace("Wtimes", "×").replace("WRightarrow", "→").replace("Wrightarrow", "→")
+    try:
+        return json.loads(dumped)
+    except Exception:
+        return out
 
 def fit_image_to_box(im: Image.Image, max_w: int, max_h: int, min_scale: float = 0.85, max_scale: float = 1.35) -> Image.Image:
     """
@@ -386,6 +647,16 @@ def pretty_formula_fallback(s: str) -> str:
     }
     for k, v in repl.items():
         s = s.replace(k, v)
+
+    # 백슬래시 없는 토큰도 최소 복구
+    s = re.sub(r"\bRightarrow\b", "⇒", s)
+    s = re.sub(r"\brightarrow\b", "→", s)
+    s = re.sub(r"\bcdot\b", "×", s)
+    s = re.sub(r"\btimes\b", "×", s)
+    s = re.sub(r"\bint\b", "∫", s)
+
+    # int_0^1 -> ∫_0^1 (문자열 노출 완화)
+    s = re.sub(r"\bint(?=\s*_)", "∫", s)
 
      # \sqrt2, \sqrt x 처리
     s = re.sub(r"\\sqrt\s*([A-Za-z0-9])", r"\\sqrt{\1}", s)
@@ -724,6 +995,9 @@ def sanitize_for_mathtext(s: str) -> str:
     s = normalize_formula(s)          # (너가 만든 정규화)
     s = _strip_math_delimiters(s)
 
+    # 백슬래시 없는 적분 표기 보정
+    s = re.sub(r"\bint(?=\s*_)", r"\\int", s)
+
     # mathtext가 약한/불안정한 토큰들 정리
     s = s.replace(r"\quad", " ")
     s = s.replace(r"\,", " ")
@@ -853,26 +1127,50 @@ def main():
 
     print("worker up. waiting queue...")
     while True:
-        item = r.brpop(QUEUE_KEY, timeout=5)
+        item = r.brpop([QUEUE_KEY, VIDEO_QUEUE_KEY], timeout=5)
         if not item:
             continue
-        _, job_id = item
+        key, job_id = item
 
-        try:
-            update_running(engine, job_id)
+        if key == QUEUE_KEY:
+            try:
+                update_running(engine, job_id)
 
-            png_path = get_input_png(engine, job_id)
-            problem_text = extract_problem_text(client, png_path)
-            detail = solve_math_to_json(client, problem_text)
+                png_path = get_input_png(engine, job_id)
+                detail = solve_math_from_png_to_json(client, png_path)
 
-            update_done(engine, job_id, json.dumps(detail, ensure_ascii=False))
+                # 단일 호출이 실패한 경우에만 기존 2단계 방식으로 재시도(호환)
+                if detail.get("concept") == "parse-failed" or not detail.get("steps"):
+                    problem_text = extract_problem_text(client, png_path)
+                    detail = solve_math_to_json(client, problem_text)
 
-            mp4_path = build_video(job_id, png_path, detail)
-            update_video_path(engine, job_id, mp4_path)
+                detail = sanitize_detail_payload(detail)
 
-        except Exception as e:
-            update_fail(engine, job_id, str(e))
-            print("job failed:", e)
+                update_done(engine, job_id, json.dumps(detail, ensure_ascii=False))
+
+            except Exception as e:
+                update_fail(engine, job_id, str(e))
+                print("job failed:", e)
+
+        elif key == VIDEO_QUEUE_KEY:
+            try:
+                update_video_running(engine, job_id)
+
+                png_path = get_input_png(engine, job_id)
+                detail_json = get_detail_json(engine, job_id)
+                if not detail_json:
+                    raise RuntimeError("detail_json is empty. solve job first")
+
+                detail = json.loads(detail_json)
+                mp4_path = build_video(job_id, png_path, detail)
+                update_video_done(engine, job_id, mp4_path)
+
+            except Exception as e:
+                update_video_fail(engine, job_id, str(e))
+                print("video job failed:", e)
+
+        else:
+            print("unknown queue key:", key)
 
 if __name__ == "__main__":
     main()

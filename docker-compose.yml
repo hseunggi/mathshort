@@ -11,7 +11,7 @@ services:
       - "3306:3306"
     command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
     volumes:
-      - mysql_data:/var/lib/mysql
+      - ./data/mysql:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s
@@ -36,6 +36,8 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: local
       STORAGE_BASE: ${STORAGE_BASE}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-google-placeholder-client-id}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-google-placeholder-client-secret}
     ports:
       - "8080:8080"
     depends_on:
@@ -68,5 +70,4 @@ services:
     volumes:
       - ./data:/data
 
-volumes:
-  mysql_data:
+

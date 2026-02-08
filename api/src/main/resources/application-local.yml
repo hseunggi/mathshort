@@ -15,6 +15,30 @@ spring:
       host: redis
       port: 6379
 
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:google-placeholder-client-id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:google-placeholder-client-secret}
+            scope:
+              - openid
+              - profile
+              - email
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 storage:
   base: ${STORAGE_BASE:/data}
 

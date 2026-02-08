@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mathshort - 이메일 가입</title>
+  <link rel="stylesheet" href="/assets/style.css" />
+</head>
+<body class="authPage">
+  <main class="authWrap">
+    <section class="authCard" aria-label="Email Signup">
+      <header class="authHeader">
+        <div class="authBrandRow">
+          <span class="authLogo" aria-hidden="true"></span>
+          <span class="authBrandText">Mathshort</span>
+        </div>
+        <div class="authTopLink">
+          이미 계정이 있나요? <a href="/login">로그인</a>
+        </div>
+      </header>
+
+      <form id="emailSignupForm" class="authForm" novalidate>
+        <input id="signupEmail" type="email" placeholder="이메일 주소" autocomplete="email" required />
+        <input id="signupPassword" type="password" placeholder="비밀번호" autocomplete="new-password" required />
+        <button class="authBtn authBtnPrimary" type="submit">가입하기</button>
+      </form>
+      <p id="signupStatus" class="authStatus"></p>
+
+      <p class="authTerms">
+        회원가입 시
+        <a href="/terms">이용약관</a> 및
+        <a href="/privacy">개인정보 보호정책</a>에 동의한 것으로 간주합니다.
+      </p>
+    </section>
+  </main>
+  <script type="module" src="/assets/signup-email.js"></script>
+</body>
+</html>

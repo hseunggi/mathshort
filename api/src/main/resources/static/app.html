@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mathshort - 문제 업로드</title>
+  <link rel="stylesheet" href="/assets/style.css" />
+  <script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(','\\)']], displayMath: [['$$','$$']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+  <header class="siteHeader">
+    <div class="headerInner">
+      <a class="brandLink" href="/">
+        <span class="logo" aria-hidden="true"></span>
+        <span class="brandText">Mathshort</span>
+      </a>
+
+      <nav class="mainNav">
+        <a href="/" data-nav="home">홈</a>
+        <a href="/app" data-nav="upload">업로드</a>
+        <a href="/mypage" data-nav="mypage">마이페이지</a>
+      </nav>
+
+      <div class="headerAuth">
+        <span id="headerUser" class="muted2" style="display:none;"></span>
+        <button class="btn ghost" id="headerLoginBtn" type="button">로그인</button>
+        <button class="btn ghost" id="headerLogoutBtn" type="button" style="display:none;">로그아웃</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap pageMain">
+    <div class="pill" title="로컬 MVP">⚡ 빠른 풀이 · 단계별 해설 · 검산 포함</div>
+<div class="grid">
+  <div class="col">
+    <div class="card">
+      <h2>문제 이미지 업로드</h2>
+      <div class="hint">PNG 업로드 후 <b>풀이 만들기</b>를 먼저 누르고, 완료 후 <b>영상 만들기</b>를 눌러주세요.</div>
+      <div class="uploadBox">
+        <input type="file" id="fileInput" class="fileInputHidden" accept="image/png,image/*" />
+        <div id="uploadDropzone" class="uploadDropzone" role="button" tabindex="0" aria-label="이미지 업로드">
+          <p id="uploadGuide" class="uploadGuide">이미지를 여기로 끌어놓거나 클릭하여 업로드</p>
+          <img id="previewImg" class="uploadPreview" alt="업로드 이미지 미리보기" />
+        </div>
+        <div class="fileRow">
+          <button class="btn" id="solveBtn">풀이 만들기</button>
+          <button class="btn ghost" id="videoBtn">영상 만들기</button>
+          <span class="muted2">PNG만 지원</span>
+        </div>
+        
+      </div>
+      <div class="hint muted2" style="margin-top:10px;">* 본 서비스는 업로드된 이미지를 분석하여 풀이를 생성합니다.</div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="card" id="videoCard">
+      <h2>영상</h2>
+      <div class="hint">문제 이미지를 업로드하고 영상 만들기 버튼을 누르면 쇼츠 영상이 생성됩니다. (약1~2분)</div>
+      <div class="status" id="videoStatus"></div>
+      <div class="videoBox">
+        <video id="player" controls playsinline style="width:100%; border-radius:14px; display:none;"></video>
+        <a class="btn ghost" id="downloadBtn" style="display:none; margin-top:10px;" target="_blank" rel="noopener">영상 열기</a>
+      </div>
+    </div>
+
+    <div class="card" id="solutionCard" style="margin-top:16px;">
+      <div class="sectionTitle">
+        <h2>풀이</h2>
+        <button class="btn ghost sm" id="solutionToggleBtn" type="button" aria-expanded="true" style="display:none;">접기</button>
+      </div>
+      <div id="solutionBody">
+        <div class="hint">문제 이미지를 업로드하고 풀이 만들기 버튼을 누르면 풀이가 생성됩니다.</div>
+        <div class="status" id="jobStatus"></div>
+        <div class="solution" id="solutionBox"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="/assets/app.js"></script>
+  </main>
+</body>
+</html>

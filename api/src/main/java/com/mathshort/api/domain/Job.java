@@ -22,11 +22,21 @@ public class Job {
     @Column(nullable = false)
     private JobStatus status;
 
+    @Column(name = "owner_username", length = 64)
+    private String ownerUsername;
+
     @Column(name = "input_png_path", length = 512, nullable = false)
     private String inputPngPath;
 
     @Column(name = "output_mp4_path", length = 512)
     private String outputMp4Path;
+
+    @Column(name = "video_status", length = 20)
+    private String videoStatus;
+
+    @Lob
+    @Column(name = "video_error_message")
+    private String videoErrorMessage;
 
     @Lob
     @Column(name = "detail_json")
@@ -43,6 +53,9 @@ public class Job {
     public void prePersist() {
         createdAt = Instant.now();
         updatedAt = createdAt;
+        if (videoStatus == null || videoStatus.isBlank()) {
+            videoStatus = "NONE";
+        }
     }
 
     @PreUpdate

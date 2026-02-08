@@ -3,684 +3,78 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>mathshort</title>
-  <style>
-    :root{
-      --bg: #0b1220;
-      --panel: rgba(255,255,255,.06);
-      --panel2: rgba(255,255,255,.08);
-      --border: rgba(255,255,255,.10);
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.70);
-      --muted2: rgba(255,255,255,.55);
-      --accent: #7c3aed; /* purple */
-      --accent2:#22c55e; /* green */
-      --danger:#ef4444;
-      --shadow: 0 12px 36px rgba(0,0,0,.35);
-      --radius: 18px;
-    }
-    *{ box-sizing: border-box; }
-    body{
-      margin:0;
-      font-family: system-ui,-apple-system,Segoe UI,Roboto,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
-      color: var(--text);
-      background:
-        radial-gradient(900px 600px at 20% 10%, rgba(124,58,237,.35), transparent 55%),
-        radial-gradient(800px 520px at 80% 0%, rgba(34,197,94,.22), transparent 55%),
-        radial-gradient(900px 700px at 40% 90%, rgba(59,130,246,.18), transparent 60%),
-        var(--bg);
-      min-height: 100vh;
-    }
-    .wrap{ max-width: 980px; margin: 0 auto; padding: 28px 18px 64px; }
-    .top{
-      display:flex; justify-content:space-between; align-items:center;
-      gap:14px; flex-wrap: wrap;
-      margin-bottom: 18px;
-    }
-    .brand{
-      display:flex; align-items:center; gap:12px;
-    }
-    .logo{
-      width:42px; height:42px; border-radius: 14px;
-      background: linear-gradient(135deg, rgba(124,58,237,.95), rgba(34,197,94,.85));
-      box-shadow: var(--shadow);
-    }
-    .brand h1{ margin:0; font-size: 20px; letter-spacing: .2px;}
-    .brand p{ margin:4px 0 0; color: var(--muted); font-size: 13px; }
-    .pill{
-      display:inline-flex; align-items:center; gap:8px;
-      padding: 10px 12px; border:1px solid var(--border);
-      background: rgba(255,255,255,.05);
-      border-radius: 999px;
-      color: var(--muted);
-      font-size: 13px;
-      box-shadow: 0 10px 26px rgba(0,0,0,.18);
-    }
-    .grid{
-      display:grid;
-      grid-template-columns: 360px 1fr;
-      gap: 16px;
-      margin-top: 14px;
-    }
-    @media (max-width: 880px){
-      .grid{ grid-template-columns: 1fr; }
-    }
-    .card{
-      border:1px solid var(--border);
-      background: var(--panel);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 18px;
-      overflow:hidden;
-    }
-    .card h2{
-      margin:0 0 10px;
-      font-size: 16px;
-      letter-spacing:.2px;
-    }
-    .muted{ color: var(--muted); }
-    .muted2{ color: var(--muted2); }
-    .upload{
-      display:flex; flex-direction:column; gap: 12px;
-    }
-    .hint{
-      font-size: 13px; color: var(--muted);
-      line-height: 1.6;
-    }
-    .fileRow{
-      display:flex; gap:10px; align-items:center; flex-wrap: wrap;
-    }
-    input[type="file"]{
-      width: 100%;
-      padding: 12px;
-      border-radius: 14px;
-      border:1px dashed rgba(255,255,255,.18);
-      background: rgba(0,0,0,.18);
-      color: var(--muted);
-    }
-    .btn{
-      display:inline-flex; align-items:center; justify-content:center;
-      gap:10px;
-      padding: 12px 14px;
-      border-radius: 14px;
-      border:1px solid rgba(124,58,237,.35);
-      background: linear-gradient(135deg, rgba(124,58,237,.9), rgba(124,58,237,.55));
-      color: white;
-      cursor:pointer;
-      box-shadow: 0 14px 28px rgba(124,58,237,.22);
-      transition: transform .08s ease, filter .2s ease;
-      min-width: 140px;
-    }
-    .btn:hover{ filter: brightness(1.03); }
-    .btn:active{ transform: translateY(1px); }
-    .btn[disabled]{
-      opacity:.55; cursor:not-allowed; filter: grayscale(.2);
-    }
-    .statusBox{
-      display:flex; gap: 10px; align-items:flex-start;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.16);
-      border-radius: 14px;
-      padding: 12px 12px;
-    }
-    .spinner{
-      width: 18px; height: 18px; border-radius: 50%;
-      border: 2px solid rgba(255,255,255,.25);
-      border-top-color: rgba(255,255,255,.92);
-      animation: spin .8s linear infinite;
-      margin-top: 2px;
-      flex: 0 0 auto;
-    }
-    @keyframes spin{ to{ transform: rotate(360deg); } }
-    .okDot, .errDot{
-      width:10px; height:10px; border-radius: 50%;
-      margin-top: 6px;
-      flex: 0 0 auto;
-    }
-    .okDot{ background: var(--accent2); box-shadow: 0 0 0 6px rgba(34,197,94,.15); }
-    .errDot{ background: var(--danger); box-shadow: 0 0 0 6px rgba(239,68,68,.12); }
-    .preview{
-      margin-top: 8px;
-      border-radius: 16px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.14);
-      padding: 10px;
-    }
-    .preview img{
-      width:100%; height:auto; display:block;
-      border-radius: 12px;
-    }
-
-    /* result */
-    .sectionTitle{
-      display:flex; align-items:center; justify-content:space-between;
-      gap: 10px; flex-wrap: wrap;
-      margin-bottom: 12px;
-    }
-    .badge{
-      font-size: 12px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.06);
-      color: var(--muted);
-    }
-    .problem{
-      font-size: 15px;
-      line-height: 1.7;
-      padding: 14px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.14);
-      white-space: pre-wrap;
-    }
-    .steps{
-      margin: 14px 0 0;
-      padding: 0;
-      list-style: none;
-      display:flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .step{
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.04);
-      border-radius: 16px;
-      padding: 14px;
-    }
-    .stepHead{
-      display:flex; gap:10px; align-items:center; flex-wrap: wrap;
-      margin-bottom: 8px;
-    }
-    .stepNum{
-      width: 28px; height: 28px;
-      border-radius: 10px;
-      display:flex; align-items:center; justify-content:center;
-      background: rgba(124,58,237,.22);
-      border: 1px solid rgba(124,58,237,.35);
-      color: rgba(255,255,255,.92);
-      font-weight: 700;
-      flex: 0 0 auto;
-    }
-    .stepTitle{ font-weight: 750; }
-    .stepBody{ color: rgba(255,255,255,.86); line-height: 1.7; }
-    .formula{
-      margin-top: 10px;
-      display:block;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      background: rgba(124,58,237,.14);
-      border: 1px solid rgba(124,58,237,.22);
-      padding: 10px 12px;
-      border-radius: 14px;
-      overflow-x:auto;
-      white-space: pre;
-    }
-    .check{
-      margin-top: 10px;
-      color: var(--muted);
-      font-size: 13px;
-      border-left: 3px solid rgba(34,197,94,.45);
-      padding-left: 10px;
-    }
-    .answerBox{
-      margin-top: 14px;
-      border-radius: 16px;
-      border:1px solid rgba(34,197,94,.25);
-      background: rgba(34,197,94,.10);
-      padding: 14px;
-      display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap: wrap;
-    }
-    .answerBox strong{ font-size: 16px; }
-    .notes{
-      margin: 12px 0 0;
-      padding-left: 18px;
-      color: rgba(255,255,255,.84);
-      line-height: 1.7;
-    }
-    .footer{
-      margin-top: 18px;
-      color: var(--muted2);
-      font-size: 12px;
-    }
-  </style>
-
-  <script>
-window.MathJax = {
-  tex: {
-    inlineMath: [['\\(','\\)']],
-    displayMath: [['$$','$$']]
-  },
-  svg: { fontCache: 'global' }
-};
-</script>
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
-
+  <title>mathshort - AI 수학 풀이/쇼츠 생성</title>
+  <link rel="stylesheet" href="/assets/style.css" />
 </head>
 <body>
-  <div class="wrap">
-    <div class="top">
-      <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
-        <div>
-          <h1>mathshort</h1>
-          <p>PNG 수학문제를 업로드하면 <b>GPT-5.2 기반</b>으로 정확한 풀이 해설을 생성합니다.</p>
-        </div>
-      </div>
-      <div class="pill" title="로컬 MVP">
-        ⚡ 빠른 풀이 · 단계별 해설 · 검산 포함
-      </div>
-    </div>
+  <header class="siteHeader">
+    <div class="headerInner">
+      <a class="brandLink" href="/">
+        <span class="logo" aria-hidden="true"></span>
+        <span class="brandText">Mathshort</span>
+      </a>
 
-    <div class="grid">
-      <!-- Left: Upload -->
-      <div class="card">
-        <h2>문제 이미지 업로드</h2>
-        <div class="hint">
-          <b>수학 문제 PNG</b>를 업로드해 주세요.<br/>
-          풀이 생성에는 보통 <b>10~30초</b> 정도 걸릴 수 있어요.
-        </div>
+      <nav class="mainNav">
+        <a href="/" data-nav="home">홈</a>
+        <a href="/app" data-nav="upload">업로드</a>
+        <a href="/mypage" data-nav="mypage">마이페이지</a>
+      </nav>
 
-        <div class="upload" style="margin-top:12px;">
-          <input id="file" type="file" accept="image/png" />
-          <div class="fileRow">
-            <button id="btn" class="btn">
-              <span id="btnText">풀이 만들기</span>
-            </button>
-            <span class="muted2">PNG만 지원</span>
-          </div>
-
-          
-
-          <div id="preview" class="preview" style="display:none;">
-            <div class="muted2" style="font-size:12px; margin:0 0 8px;">업로드한 이미지</div>
-            <img id="previewImg" alt="업로드한 문제 이미지 미리보기" />
-          </div>
-
-          <div class="footer">
-            * 본 서비스는 업로드된 이미지를 분석하여 풀이를 생성합니다. (MVP)
-          </div>
-        </div>
-      </div>
-
-<!-- Right: Video + Solution -->
-<div style="display:flex; flex-direction:column; gap:16px;">
-
-  <!-- Video Card -->
-  <div class="card">
-    <div class="sectionTitle">
-      <h2 style="margin:0;">영상</h2>
-      <span id="videoBadge" class="badge" style="display:none;"></span>
-    </div>
-
-    <div id="videoEmpty" class="muted">
-      문제 이미지를 업로드하면, 여기에 쇼츠 영상이 생성됩니다.
-    </div>
-
-    <div id="videoBox" style="display:none;">
-      <video id="videoPlayer" controls playsinline style="width:100%; border-radius:16px; border:1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.25);"></video>
-
-      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
-        <a id="videoDownload" class="badge" href="#" download style="text-decoration:none; color: inherit;">
-          ⬇️ 영상 다운로드
-        </a>
-        <span class="badge">1080×1920</span>
-        <span class="badge">최대 60초</span>
-      </div>
-
-      <div class="footer" style="margin-top:10px;">
-        * 영상은 풀이가 완성된 뒤 생성됩니다. 
+      <div class="headerAuth">
+        <span id="headerUser" class="muted2" style="display:none;"></span>
+        <button class="btn ghost" id="headerLoginBtn" type="button">로그인</button>
+        <button class="btn ghost" id="headerLogoutBtn" type="button" style="display:none;">로그아웃</button>
       </div>
     </div>
+  </header>
 
-    <div id="videoPending" class="statusBox" style="display:none;">
-      <div class="spinner"></div>
+  <main class="wrap pageMain">
+    <section class="hero TextCenter">
       <div>
-        <div style="font-weight:650;">영상 생성 중입니다…</div>
-        <div class="muted2" style="font-size:12px; margin-top:3px;">완료되면 자동으로 재생 가능합니다.</div>
-      </div>
-    </div>
-
-    <div id="videoNotReady" class="statusBox" style="display:none;">
-      <div class="okDot"></div>
-      <div>
-        <div style="font-weight:650;">영상 생성 중입니다…</div>
-        <div class="muted2" style="font-size:12px; margin-top:3px;">영상 생성이 곧 완료됩니다.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Solution Card (Collapsible) -->
-  <div class="card">
-    <div class="sectionTitle">
-      <h2 style="margin:0;">풀이</h2>
-      <span id="resultBadge" class="badge" style="display:none;"></span>
-    </div>
-
-    <div id="emptyState" class="muted">
-      왼쪽에서 문제 이미지를 업로드하면 여기에 풀이가 표시됩니다.
-    </div>
-
-    <div id="errorState" style="display:none;">
-      <div class="statusBox" style="border-color: rgba(239,68,68,.25); background: rgba(239,68,68,.08);">
-        <div class="errDot"></div>
-        <div>
-          <div style="font-weight:700;">풀이 생성에 실패했어요.</div>
-          <div id="errText" class="muted2" style="margin-top:4px; white-space:pre-wrap;"></div>
+        <p class="eyebrow">AI Math Short-Form Studio</p>
+        <h1 class="heroTitle">AI 수학 풀이 · 영상 생성</h1>
+        <p class="heroDesc">문제를 올리면 단계별 해설, 검산 포인트, 수식 렌더, 영상 생성까지 한 번에 처리합니다.</p>
+        <div class="fileRow heroCtaRow">
+          <a class="btn heroCtaBtn" href="/app">지금 시작하기</a>
         </div>
       </div>
-    </div>
-    
-    <div id="statusWrap" class="statusBox" style="display:none;">
-            <div id="statusIcon" class="spinner"></div>
-            <div>
-              <div id="statusText" style="font-weight:650;">처리 중…</div>
-              <div id="statusSub" class="muted2" style="font-size:12px; margin-top:3px;"></div>
-            </div>
+    </section>
+
+    <section class="landingSection">
+      <h2>핵심 기능</h2>
+      <div class="featureGrid">
+        <article class="featureCard"><h3>정확한 풀이</h3><p>최신 GPT 기반 AI로 정확한 풀이를 생성합니다.</p></article>
+        <article class="featureCard"><h3>단계별 해설</h3><p>문제 이해부터 정답 도출까지 단계별로 제공합니다.</p></article>
+        <article class="featureCard"><h3>쇼츠 영상</h3><p>완성된 풀이를 AI쇼츠 영상으로 생성해줍니다.</p></article>
+      </div>
+    </section>
+
+    <section class="landingSection">
+      <div class="resultShowcase">
+        <div class="resultTextBlock">
+          <h3 class="resultHeadline">Mathshort로 문제 풀이 + 영상 생성</h3>
+          <p>Mathshort는 GPT-5.2 기반 정확한 단계별 문제 풀이와 영상까지 자동생성해줍니다.</p>
+        </div>
+        <article class="resultCard">
+          <div class="resultFrame">
+            <img src="/assets/result.png" alt="Mathshort 결과 예시" loading="lazy" />
           </div>
-          
-    <!-- ✅ 접기/펼치기 -->
-    <details id="solutionDetails" style="display:none;" open>
-      <summary class="badge" style="cursor:pointer; user-select:none;">
-        풀이 펼치기/접기
-      </summary>
-
-      <div id="result" style="margin-top:12px;">
-        <div id="problem" class="problem"></div>
-        <div id="concept" class="muted" style="margin-top:10px;"></div>
-
-        <ul id="steps" class="steps"></ul>
-
-        <div class="answerBox">
-          <div>
-            <div class="muted2" style="font-size:12px;">정답</div>
-            <strong id="answer"></strong>
-          </div>
-          <span class="badge">검산/점검 포함</span>
-        </div>
-
-        <div id="notesWrap" style="margin-top:12px;">
-          <div class="muted2" style="font-size:12px; margin-bottom:6px;">메모</div>
-          <ul id="notes" class="notes"></ul>
-        </div>
+        </article>
       </div>
-    </details>
-  </div>
+    </section>
 
-</div>
-</div>  <!-- end grid -->
-</div>  <!-- end wrap -->
-
-<script>
-const API_BASE = ""; // same origin
-let pollTimer = null;
-let currentJobId = null;
-
-function show(id, on=true){ document.getElementById(id).style.display = on ? "" : "none"; }
-function setBtnLoading(on){
-  const btn = document.getElementById("btn");
-  btn.disabled = on;
-  document.getElementById("btnText").textContent = on ? "생성 중..." : "풀이 만들기";
-}
-
-async function createJob(file){
-  const form = new FormData();
-  form.append("file", file);
-  const res = await fetch(`${API_BASE}/v1/jobs`, { method:"POST", body: form });
-  if(!res.ok) throw new Error(await res.text());
-  return await res.json();
-}
-async function getJob(jobId){
-  const res = await fetch(`${API_BASE}/v1/jobs/${jobId}`);
-  if(!res.ok) throw new Error(await res.text());
-  return await res.json();
-}
-
-function statusMessage(job){
-  if(job.status === "PENDING") return ["대기 중입니다…", "잠시 후 풀이를 시작합니다."];
-  if(job.status === "RUNNING") return ["문제를 풀이 중입니다…", "정확한 해설을 생성하고 있어요."];
-  if(job.status === "DONE") return ["풀이가 완성되었습니다!", "아래에서 결과를 확인하세요."];
-  if(job.status === "FAIL") return ["풀이 생성에 실패했습니다.", "다른 이미지로 다시 시도해 주세요."];
-  return ["처리 중…", ""];
-}
-
-function setStatusUI(job){
-  show("statusWrap", true);
-
-  const icon = document.getElementById("statusIcon");
-  icon.className = ""; // reset
-
-  if(job.status === "DONE"){
-    icon.className = "okDot";
-  }else if(job.status === "FAIL"){
-    icon.className = "errDot";
-  }else{
-    icon.className = "spinner";
-  }
-
-  const [t, sub] = statusMessage(job);
-  document.getElementById("statusText").textContent = t;
-  document.getElementById("statusSub").textContent = sub;
-}
-
-function setVideoUI(job){
-  // 초기 숨김
-  show("videoEmpty", false);
-  show("videoBox", false);
-  show("videoPending", false);
-  show("videoNotReady", false);
-  show("videoBadge", true);
-
-  const badge = document.getElementById("videoBadge");
-
-  // 업로드 전
-  if(!job){
-    show("videoEmpty", true);
-    badge.textContent = "";
-    show("videoBadge", false);
-    return;
-  }
-
-  if(job.status === "PENDING" || job.status === "RUNNING"){
-    badge.textContent = "영상 준비 중";
-    show("videoPending", true);
-    return;
-  }
-
-  if(job.status === "FAIL"){
-    badge.textContent = "실패";
-    show("videoEmpty", true);
-    return;
-  }
-
-  // DONE
-  if (job.outputMp4Path) {
-    badge.textContent = "완료";
-    show("videoBox", true);
-
-    const player = document.getElementById("videoPlayer");
-    const dl = document.getElementById("videoDownload");
-
-    // 재생/다운로드 URL 결정
-    const videoUrl = job.outputMp4Path.startsWith("http")
-      ? job.outputMp4Path
-      : `/v1/jobs/${job.jobId}/video`;
-
-    player.src = videoUrl;
-
-    // 다운로드 버튼도 실제로 동작하게
-    dl.href = videoUrl;
-    dl.setAttribute("download", `mathshort-${job.jobId}.mp4`); // 파일명 지정(선택)
-    dl.onclick = null; // 기존 막는 핸들러 제거
-
-    return;
-  }
-
-
-  // DONE인데 mp4 아직 없음
-  badge.textContent = "대기";
-  show("videoNotReady", true);
-}
-
-function render(job){
-  setStatusUI(job);
-  setVideoUI(job);
-
-  show("emptyState", false);
-  show("errorState", false);
-  show("solutionDetails", false);
-  show("resultBadge", true);
-
-  const badge = document.getElementById("resultBadge");
-  badge.textContent = (job.status === "RUNNING" || job.status === "PENDING")
-    ? "풀이 생성 중"
-    : (job.status === "DONE" ? "완료" : "실패");
-
-  if(job.status === "FAIL"){
-    show("errorState", true);
-    show("solutionDetails", false)
-    document.getElementById("errText").textContent = job.errorMessage || "(no message)";
-    setBtnLoading(false);
-    return;
-  }
-  if(job.status !== "DONE"){
-    setBtnLoading(true);
-    show("solutionDetails", false);
-    return;
-  }
-
-  setBtnLoading(false);
-  show("solutionDetails", true);
-
-  let detail = null;
-  try{
-    detail = job.detailJson ? JSON.parse(job.detailJson) : null;
-  }catch(e){
-    detail = { problemText: "(파싱 실패)", steps: [], finalAnswer:"", notes:[], raw: job.detailJson };
-  }
-
-  document.getElementById("problem").textContent = detail?.problemText || "(no problemText)";
-  document.getElementById("concept").textContent = detail?.concept ? `유형: ${detail.concept}` : "";
-
-  const stepsEl = document.getElementById("steps");
-  stepsEl.innerHTML = "";
-  (detail?.steps || []).forEach(s => {
-    const li = document.createElement("li");
-    li.className = "step";
-    li.innerHTML = `
-      <div class="stepHead">
-        <div class="stepNum">${escapeHtml(String(s.idx ?? ""))}</div>
-        <div class="stepTitle">${escapeHtml(s.title || "")}</div>
+    <section class="landingSection">
+      <h2>FAQ</h2>
+      <div class="faqList">
+        <details><summary>어떤 파일 형식을 지원하나요?</summary><p>현재 PNG 파일을 지원합니다.</p></details>
+        <details><summary>풀이/영상 생성 시간은 얼마나 걸리나요?</summary><p>문제 난이도와 서버 상태에 따라 풀이는 수 초~수십 초 소요되고, 영상 생성은 수십 초~수분 소요됩니다.</p></details>
+        <details><summary>어떤 AI 기술을 사용하나요?</summary><p>Mathshort는 GPT-5.2 기반의 최신 AI 기술을 사용합니다.</p></details>
       </div>
-      <div class="stepBody">${escapeHtml(s.explanation || "")}</div>
-      ${s.formula ? `<span class="formula math">\\(${escapeHtml(s.formula)}\\)</span>` : ``}
-      ${s.check ? `<div class="check">check: ${escapeHtml(s.check)}</div>` : ``}
-    `;
-    stepsEl.appendChild(li);
-  });
+    </section>
 
-  document.getElementById("answer").textContent = detail?.finalAnswer || "(no finalAnswer)";
+    <footer class="footerBar">© Mathshort · AI 수학 풀이/쇼츠 생성</footer>
+  </main>
 
-  const notesEl = document.getElementById("notes");
-  notesEl.innerHTML = "";
-  const notes = (detail?.notes || []).filter(Boolean);
-  show("notesWrap", notes.length > 0);
-  notes.forEach(n => {
-    const li = document.createElement("li");
-    li.textContent = n;
-    notesEl.appendChild(li);
-  });
-  if (window.MathJax) {
-    MathJax.typesetClear();
-    MathJax.typesetPromise([document.getElementById("result")]);
-  }
-
-}
-
-function escapeHtml(s){
-  return String(s)
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-
-async function poll(jobId){
-  if(pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(async () => {
-    try{
-      const job = await getJob(jobId);
-      render(job);
-      if(job.status === "FAIL"){
-        clearInterval(pollTimer);
-        pollTimer = null;
-      }
-      if(job.status === "DONE"){
-        // 영상까지 준비되면 종료
-        if(job.outputMp4Path){
-          clearInterval(pollTimer);
-          pollTimer = null;
-        }
-        // outputMp4Path 없으면 계속 폴링해서 영상이 채워지는 순간 반영
-      }
-    }catch(e){
-      // 네트워크 오류 등은 일단 콘솔만
-      console.error(e);
-    }
-  }, 1000);
-}
-
-function setPreview(file){
-  const img = document.getElementById("previewImg");
-  const url = URL.createObjectURL(file);
-  img.src = url;
-  show("preview", true);
-  img.onload = () => URL.revokeObjectURL(url);
-}
-
-document.getElementById("btn").addEventListener("click", async () => {
-  const file = document.getElementById("file").files?.[0];
-  if(!file){ alert("PNG 파일을 선택해 주세요."); return; }
-
-  // reset UI
-  currentJobId = null;
-  if(pollTimer){ clearInterval(pollTimer); pollTimer=null; }
-  show("resultBadge", false);
-  show("emptyState", true);
-  show("errorState", false);
-  show("solutionDetails", false);
-
-  setPreview(file);
-  setBtnLoading(true);
-  show("statusWrap", true);
-  document.getElementById("statusIcon").className = "spinner";
-  document.getElementById("statusText").textContent = "업로드 중…";
-  document.getElementById("statusSub").textContent = "이미지를 전송하고 있어요.";
-
-  try{
-    const created = await createJob(file);
-    currentJobId = created.jobId;
-
-    // 첫 조회
-    const job = await getJob(currentJobId);
-    setVideoUI(job);
-
-    render(job);
-
-    // 폴링 시작
-    poll(currentJobId);
-
-  }catch(e){
-    setBtnLoading(false);
-    show("errorState", true);
-    document.getElementById("errText").textContent = String(e);
-    document.getElementById("statusIcon").className = "errDot";
-    document.getElementById("statusText").textContent = "업로드/처리 실패";
-    document.getElementById("statusSub").textContent = "잠시 후 다시 시도해 주세요.";
-  }
-});
-setVideoUI(null);
-
-</script>
+  <script type="module" src="/assets/home.js"></script>
 </body>
 </html>

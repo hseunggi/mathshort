@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mathshort - 이메일 인증</title>
+  <link rel="stylesheet" href="/assets/style.css" />
+</head>
+<body class="authPage">
+  <main class="authWrap">
+    <section class="authCard" aria-label="Email Verify">
+      <header class="authHeader">
+        <div class="authBrandRow">
+          <span class="authLogo" aria-hidden="true"></span>
+          <span class="authBrandText">Mathshort</span>
+        </div>
+      </header>
+
+      <p class="authVerifyText">아래 이메일로 전송된 인증 코드를 입력하세요.</p>
+      <p id="verifyEmailView" class="authVerifyEmail"></p>
+
+      <form id="verifyForm" class="authForm" novalidate>
+        <input id="verifyCode" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="인증코드6자리를 입력하세요" required />
+        <button class="authBtn authBtnPrimary" type="submit">인증하기</button>
+      </form>
+      <button id="resendCodeBtn" class="authBtn authBtnEmail" type="button">인증코드 재전송</button>
+      <p id="verifyStatus" class="authStatus"></p>
+    </section>
+  </main>
+  <script type="module" src="/assets/signup-verify.js"></script>
+</body>
+</html>

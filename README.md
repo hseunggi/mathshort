@@ -80,6 +80,8 @@ AI 기반 자동 해설·영상 생성 서비스입니다.
 9. Result Save: 생성된 영상 경로 및 상태를 MySQL에 업데이트하고, 사용자는 웹에서 결과를 다시보기
 
 ## 시스템구조
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/001a9520-0894-4d51-84e7-f17887771cdc" />
+
 
 ## 결과화면
 <img width="800" height="450" alt="스크린샷 2026-02-09 190751" src="https://github.com/user-attachments/assets/9d064056-b3d6-455d-a734-64762bac2c9c" />
